@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>麻雀コンパス コントローラー</title>
+</head>
+<body>
+    <h1>Pico 2 W 点数送信テスト</h1>
+    
+    <button id="connect">1. Picoに接続する</button>
+    <br><br>
+    <input type="text" id="data-input" placeholder="2. 送信する文字列を入力" />
+    <br><br>
+    <button id="send-data" disabled>3. 送信</button>
+    <br><br>
+    <textarea id="log" rows="10" cols="50" readonly></textarea>
+
+
+    <script>
+    // Nordic UART Service (NUS) の世界共通のUUID
+    const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+    const RX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // スマホからPicoへ【送信用】
+    const TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // Picoからスマホへ【受信用】
+
+    let bluetoothDevice = null;
+    let rxCharacteristic = null; // 追加
+    let txCharacteristic = null; // 追加
+
+    // 1. Bluetoothデバイスへの接続処理
+    document.getElementById('connect').addEventListener('click', async () => {
+        try {
+            document.getElementById('log').value += 'デバイスを検索中...\n';
+            bluetoothDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ services: [SERVICE_UUID] }]
+            });
+
+            bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            await gattConnect();
+
+        } catch (error) {
+            document.getElementById('log').value += '接続失敗: ' + error + '\n';
+        }
+    });
+
+    // 内部的な接続・通知（Notification）の開始処理
+    async function gattConnect() {
+        document.getElementById('log').value += '接続中...\n';
+        const server = await bluetoothDevice.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        
+        // 【修正】送信用と受信用の特性を別々に取得
+        rxCharacteristic = await service.getCharacteristic(RX_CHARACTERISTIC_UUID);
+        txCharacteristic = await service.getCharacteristic(TX_CHARACTERISTIC_UUID);
+
+        // 受信用(TX)に対して通知を開始
+        await txCharacteristic.startNotifications();
+        txCharacteristic.addEventListener('characteristicvaluechanged', handleDataReceived);
+
+        document.getElementById('log').value += 'JongPass との同期が完了しました！\n';
+        document.getElementById('send-data').disabled = false;
+    }
+
+    // 自動再接続
+    async function onDisconnected(event) {
+        const device = event.target;
+        document.getElementById('log').value += '通信が切れました。自動再接続を試みます...\n';
+        document.getElementById('send-data').disabled = true;
+
+        while (!device.gatt.connected) {
+            try {
+                document.getElementById('log').value += '自動再接続を試みています...\n';
+                await gattConnect();
+                break;
+            } catch (error) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    }
+
+    // Picoからデータを受信したときの処理
+    function handleDataReceived(event) {
+        let value = event.target.value;
+        let decoder = new TextDecoder('utf-8');
+        let receivedString = decoder.decode(value);
+        
+        document.getElementById('log').value += '受信: ' + receivedString + '\n';
+    }
+
+    // 2. データの送信処理
+    document.getElementById('send-data').addEventListener('click', async () => {
+        if (!rxCharacteristic) return;
+
+        try {
+            const textInput = document.getElementById('data-input');
+            // 文字列の前後の余計な空白を排除
+            const cleanText = textInput.value.trim(); 
+            
+            if (cleanText === "") return;
+
+            const encoder = new TextEncoder();
+            
+            // 【重要修正】WithoutResponse から WithResponse に変更して通信を同期化
+            await rxCharacteristic.writeValueWithResponse(encoder.encode(cleanText));
+            
+            document.getElementById('log').value += '送信完了: ' + cleanText + '\n';
+            textInput.value = '';
+        } catch (error) {
+            document.getElementById('log').value += '送信失敗: ' + error + '\n';
+        }
+    });
+</script>
+</body>
+</html>
