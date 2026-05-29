@@ -1,0 +1,150 @@
+* {
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    color: whitesmoke;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    padding:0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    width: 100vw;
+    background-color: #222222;
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 2em;
+}
+
+h1 {
+    margin: 1em 0 0 0;
+}
+
+.compass {
+    width: 95vmin;
+    height: 95vmin;
+    background-color: #333333;
+    border-radius: 1%;
+    border: 2px solid whitesmoke;
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-rows: 1fr 3fr 1fr;
+}
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.stats > .box {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    flex: 1 1 auto;
+    align-self: stretch;
+    background-color: black;
+    border: 1px solid whitesmoke;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10%;
+}
+
+.mid > .box {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    flex: 1 1 auto;
+    align-self: stretch;
+    background-color: black;
+    border: 1px solid whitesmoke;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+}
+
+.mid > .box > .text {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.stats > .box > .dir {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.stats > .box > .score {
+    text-align: right;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+#st-2 > .box, #st-4 > .box {
+    flex-direction: column;
+}
+
+#st-2 > .box > .dir, #st-2 > .box > .score {
+    rotate: -90deg;
+}
+#st-3 > .box > .dir, #st-3 > .box > .score {
+    rotate: 180deg;
+}
+
+#st-4 > .box > .dir, #st-4 > .box > .score {
+    rotate: 90deg;
+}
+
+.commands {
+    width: 95%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+
+button {
+    cursor: pointer;
+    padding: .5em 1em;
+    background-color: #222222;
+    border: 1px solid whitesmoke;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    color: whitesmoke;
+    font-size: 1.5em;
+}
+
+button:active {
+    scale: 0.95;
+    transition:all cubic-bezier(1, 0, 0, 1) 0.1s;
+}
+
+button#tumo {
+    background-color: #008800;
+}
+
+button#ron {
+    background-color: #9e2e2e;
+}
