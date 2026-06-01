@@ -8,6 +8,7 @@
 <script src="script.js"></script>
 <body>
     <h1>雀パス 制御アプリ</h1>
+    <h2 id="msg"></h2>
 
     <div class="compass">
         <div class="lt-btn">
@@ -15,6 +16,10 @@
         </div>
         <div class="stats" id="st-3">
             <div class="box">
+                <div class="btns">
+                    <button id="ron-btn" onclick="SelectRon(2)">ロン</button>
+                    <button id="tumo-btn" onclick="ShowTumo(2)">ツモ</button>
+                </div>
                 <div class="score">
                     25000
                 </div>
@@ -34,6 +39,10 @@
                 <div class="score">
                     25000
                 </div>
+                <div class="btns">
+                    <button id="tumo-btn" onclick="ShowTumo(3)">ツモ</button>
+                    <button id="ron-btn" onclick="SelectRon(3)">ロン</button>
+                </div>
             </div>
         </div>
         <div class="mid">
@@ -48,6 +57,10 @@
         </div>
         <div class="stats" id="st-2">
             <div class="box">
+                <div class="btns">
+                    <button id="ron-btn" onclick="SelectRon(1)">ロン</button>
+                    <button id="tumo-btn" onclick="ShowTumo(1)">ツモ</button>
+                </div>
                 <div class="score">
                     25000
                 </div>
@@ -67,6 +80,10 @@
                 <div class="score">
                     25000
                 </div>
+                <div class="btns">
+                    <button id="tumo-btn" onclick="ShowTumo(0)">ツモ</button>
+                    <button id="ron-btn" onclick="SelectRon(0)">ロン</button>
+                </div>
             </div>
         </div>
         <div class="rb-btn">
@@ -75,12 +92,55 @@
     </div>
 
     <div class="commands">
-        <button id="reset" onclick="console.log('Reset')">リセット</button>
-        <button id="tumo" onclick="console.log('Tumo')">ツモ</button>
-        <button id="ron" onclick="console.log('Ron')">ロン</button>
-        <button id="ryukyoku" onclick="console.log('Ryukyoku')">流局</button>
-        <button id="chonbo" onclick="console.log('Chonbo')">チョンボ</button>
+        <button id="reset" onclick="Show('.screen#reset')">リセット</button>
+        <button id="chonbo" onclick="Show('.screen#chonbo')">チョンボ</button>
+        <button id="seisan" onclick="Show('.screen#seisan')">精算</button>
+    </div>
+
+    <button id="cancel" style="display: none;">キャンセル</button>
+
+    <div class="screen" id="connection" style="display: none;">
+        <h1>ジャンパスに接続されていません</h1>
+        <button id="connect" onclick="Connect()">端末を選択</button>
+    </div>
+
+    <div class="screen" id="tumo" style="display: none;">
+        <h1>ツモ</h1>
+        <h2>P0</h2>
+        <div class="btn-grid">
+        </div>
+        <button class="cancel" onclick="CancelTumo()">キャンセル</button>
+    </div>
+
+    <div class="screen" id="ron" style="display: none;">
+        <h1>ロン</h1>
+        <h2>誰 → 誰</h2>
+        <div class="btn-grid">
+            <button class="btn-score" id="score-2000" onclick="SelectScore(2000)">2000</button>
+        </div>
+        <button class="cancel" onclick="CancelRon()">キャンセル</button>
+    </div>
+
+    <div class="screen" id="reset" style="display: none;">
+        <h1>ゲームをリセットしますか？</h1>
+        <button id="yes-reset" onclick="Reset()">はい</button>
+        <button id="no-reset" onclick="Hide('.screen#reset')">いいえ</button>
+    </div>
+
+    <div class="screen" id="chonbo" style="display: none;">
+        <h1>誰がチョンボしましたか？</h1>
+        <div class="btn-row">
+            <button id="chonbo-east" onclick="Chonbo(0)">東</button>
+            <button id="chonbo-south" onclick="Chonbo(1)">南</button>
+            <button id="chonbo-west" onclick="Chonbo(2)">西</button>
+            <button id="chonbo-north" onclick="Chonbo(3)">北</button>
+        </div>
+        <button id="no-chonbo" onclick="Hide('.screen#chonbo')">キャンセル</button>
     </div>
     
+    <div class="screen" id="seisan" style="display: none;">
+        <h1>精算</h1>
+    </div>
+
 </body>
 </html>
