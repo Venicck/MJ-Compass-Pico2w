@@ -164,19 +164,21 @@ function ConfirmTumo(playerIndex) {
     grid.innerHTML = '';
     let list = tumoPlayer === 0 ? TumoListOya : TumoList;
     for (let i = 0; i < list.length; i++) {
+        const idx = i;
+        let sco = null;
         if (tumoPlayer === 0) {
-            var score = list[i];
+            sco = list[idx];
         } else {
-            var score = `${list[i][0]}-${list[i][1]}`;
+            sco = `${list[idx][0]}-${list[idx][1]}`;
         }
         const btn = document.createElement('button');
         if (tumoPlayer === 0) {
-            btn.textContent = score + " All";
+            btn.textContent = sco + " All";
         } else {
-            btn.textContent = score;
+            btn.textContent = sco;
         }
-        btn.id = `score-${score}`;
-        btn.onclick = () => SelectScore(score);
+        btn.id = `score-${sco}`;
+        btn.onclick = () => SelectScore(sco);
         grid.appendChild(btn);
     }
 }
@@ -191,11 +193,16 @@ function CancelTumo() {
 
 function SelectScore(score) {
     selectedScore = score;
-    let btns = document.querySelectorAll(".screen > .btn-grid > button");
+    let tumoSc = document.querySelector(".screen#tumo");
+    let ronSc = document.querySelector(".screen#ron");
+    let sc = null;
+    if (tumoSc.style.display != "none") sc = tumoSc;
+    else sc = ronSc;
+    let btns = sc.querySelectorAll(".btn-grid > button");
     btns.forEach(btn => {
         if (btn.id == `score-${score}`) {
             btn.style.backgroundColor = "#008800";
-        }   else {
+        } else {
             btn.style.backgroundColor = "#222222";
         }
     });
