@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>雀パス 制御アプリ</title>
     <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <script src="script.js"></script>
 <body>
@@ -18,10 +19,7 @@
             <div class="box">
                 <div class="btns">
                     <button id="ron-btn" onclick="SelectRon(2)">ロン</button>
-                    <button id="tumo-btn" onclick="ShowTumo(2)">ツモ</button>
-                </div>
-                <div class="score">
-                    25000
+                    <button id="tumo-btn" onclick="ConfirmTumo(2)">ツモ</button>
                 </div>
                 <div class="dir">
                     西
@@ -36,33 +34,32 @@
                 <div class="dir">
                     北
                 </div>
-                <div class="score">
-                    25000
-                </div>
                 <div class="btns">
-                    <button id="tumo-btn" onclick="ShowTumo(3)">ツモ</button>
+                    <button id="tumo-btn" onclick="ConfirmTumo(3)">ツモ</button>
                     <button id="ron-btn" onclick="SelectRon(3)">ロン</button>
                 </div>
             </div>
         </div>
         <div class="mid">
             <div class="box">
+                <div class="bl"></div>
+                <div class="score" id="sc-3">25000</div>
+                <div class="bl"></div>
+                <div class="score" id="sc-4">25000</div>
                 <div class="text">
-                    東1局 0本場
+                    東1局<br>0本場<br>供託 0本
                 </div>
-                <div class="text">
-                    供託 0本
-                </div>
+                <div class="score" id="sc-2">25000</div>
+                <div class="bl"></div>
+                <div class="score" id="sc-1">25000</div>
+                <div class="bl"></div>
             </div>
         </div>
         <div class="stats" id="st-2">
             <div class="box">
                 <div class="btns">
                     <button id="ron-btn" onclick="SelectRon(1)">ロン</button>
-                    <button id="tumo-btn" onclick="ShowTumo(1)">ツモ</button>
-                </div>
-                <div class="score">
-                    25000
+                    <button id="tumo-btn" onclick="ConfirmTumo(1)">ツモ</button>
                 </div>
                 <div class="dir">
                     南
@@ -77,11 +74,8 @@
                 <div class="dir">
                     東
                 </div>
-                <div class="score">
-                    25000
-                </div>
                 <div class="btns">
-                    <button id="tumo-btn" onclick="ShowTumo(0)">ツモ</button>
+                    <button id="tumo-btn" onclick="ConfirmTumo(0)">ツモ</button>
                     <button id="ron-btn" onclick="SelectRon(0)">ロン</button>
                 </div>
             </div>
@@ -109,6 +103,7 @@
         <h2>P0</h2>
         <div class="btn-grid">
         </div>
+        <button class="confirm" onclick="PayTumo()">確定</button>
         <button class="cancel" onclick="CancelTumo()">キャンセル</button>
     </div>
 
@@ -118,6 +113,7 @@
         <div class="btn-grid">
             <button class="btn-score" id="score-2000" onclick="SelectScore(2000)">2000</button>
         </div>
+        <button class="confirm" onclick="PayRon()">確定</button>
         <button class="cancel" onclick="CancelRon()">キャンセル</button>
     </div>
 

@@ -2,6 +2,7 @@
     font-family: Arial, sans-serif;
     box-sizing: border-box;
     color: whitesmoke;
+    font-size: 10px;
     margin: 0;
     padding: 0;
 }
@@ -41,7 +42,7 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 10px;
 }
 
 .stats > .box {
@@ -78,26 +79,43 @@ h1 {
     border: 1px solid whitesmoke;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 1fr 2fr 1fr;
     gap: 1em;
 }
 
 .mid > .box > .text {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    text-align: center;
     font-size: 1.5em;
     font-weight: bold;
+}
+
+.mid > .box > .score {
+    align-self: center;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.mid > .box > .score#sc-2 {
+    rotate: -90deg;
+}
+.mid > .box > .score#sc-3 {
+    rotate: 180deg;
+}
+.mid > .box > .score#sc-4 {
+    rotate: -270deg;
 }
 
 .stats > .box > .dir {
     font-size: 2em;
-    font-weight: bold;
-}
-
-.stats > .box > .score {
-    text-align: right;
-    font-size: 1.5em;
     font-weight: bold;
 }
 
@@ -111,7 +129,7 @@ h1 {
 
 .stats > .box > .btns > button {
     padding: 0.2em 0.5em;
-    font-size: 1.2em;
+    font-size: 1.5em;
     background-color: #444444;
     border: 1px solid whitesmoke;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
@@ -133,25 +151,33 @@ h1 {
     flex-direction: column;
     gap: 1.7em;
 }
+
+#st-2 > .box > .dir {
+    rotate: -90deg;
+}
+#st-3 > .box > .dir {
+    rotate: 180deg;
+}
+#st-4 > .box > .dir {
+    rotate: -270deg;
+}
 #st-2 > .box > .btns > button {
     rotate: -90deg;
+    align-self: center;
+    width: max-content;
+    height: auto;
 }
 #st-3 > .box > .btns > button {
     rotate: 180deg;
+    align-self: center;
+    width: max-content;
+    height: auto;
 }
 #st-4 > .box > .btns > button {
     rotate: -270deg;
-}
-
-#st-2 > .box > .dir, #st-2 > .box > .score {
-    rotate: -90deg;
-}
-#st-3 > .box > .dir, #st-3 > .box > .score {
-    rotate: 180deg;
-}
-
-#st-4 > .box > .dir, #st-4 > .box > .score {
-    rotate: 90deg;
+    align-self: center;
+    width: max-content;
+    height: auto;
 }
 
 .commands {
@@ -195,6 +221,7 @@ h1 {
 }
 
 button {
+    touch-action: manipulation;
     cursor: pointer;
     padding: .5em 1em;
     background-color: #222222;

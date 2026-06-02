@@ -57,8 +57,8 @@ const TumoListOyaOther = [
 
 
 let bluetoothDevice = null;
-let rxCharacteristic = null; // 追加
-let txCharacteristic = null; // 追加
+let rxCharacteristic = null; 
+let txCharacteristic = null; 
 function LOG(str, color=null) {
     console.log(str);
 }
@@ -120,7 +120,30 @@ function ConfirmRon(playerIndex) {
     document.querySelector(".screen#ron > h2").textContent = `P${ronPlayerPay} → P${ronPlayerGet}`;
 }
 
+function PayRon() {
+    if (selectedScore === null) {
+        alert("点数を選んでください");
+        return;
+    }
+    const data = `RON:${ronPlayerPay}<-${ronPlayerGet}_${selectedScore}`;
+    Send(data);
+    CancelRon();
+}
+
+function PayTumo() {
+    if (selectedScore === null) {
+        alert("点数を選んでください");
+        return;
+    }
+    const data = `TUMO:${tumoPlayer}<-${selectedScore.replace("-", "_")}`;
+    Send(data);
+    CancelTumo();
+}
+
 function CancelRon() {
+    selectedScore = null;
+    ronPlayerPay = null;
+    ronPlayerGet = null;
     for (i = 0; i < 4; i++) {
         let box = document.querySelector(`#st-${i+1} > .box`);
         box.style.cursor = "default";
@@ -134,7 +157,33 @@ function CancelRon() {
     document.querySelector("h2#msg").textContent = "";
 }
 
+function ConfirmTumo(playerIndex) {
+    tumoPlayer = playerIndex;
+    Show('.screen#tumo');
+    const grid = document.querySelector('.screen#tumo > .btn-grid');
+    grid.innerHTML = '';
+    let list = tumoPlayer === 0 ? TumoListOya : TumoList;
+    for (let i = 0; i < list.length; i++) {
+        if (tumoPlayer === 0) {
+            var score = list[i];
+        } else {
+            var score = `${list[i][0]}-${list[i][1]}`;
+        }
+        const btn = document.createElement('button');
+        if (tumoPlayer === 0) {
+            btn.textContent = score + " All";
+        } else {
+            btn.textContent = score;
+        }
+        btn.id = `score-${score}`;
+        btn.onclick = () => SelectScore(score);
+        grid.appendChild(btn);
+    }
+}
+
 function CancelTumo() {
+    selectedScore = null;
+    tumoPlayer = null;
     Hide('.screen#tumo');
     Show(".stats > .box > .btns > button", "block");
     Show(".commands", "flex");
@@ -142,8 +191,7 @@ function CancelTumo() {
 
 function SelectScore(score) {
     selectedScore = score;
-    const screen = document.querySelector('.screen[style="display: flex;"]');
-    let btns = screen.querySelectorAll(".btn-grid > button");
+    let btns = document.querySelectorAll(".screen > .btn-grid > button");
     btns.forEach(btn => {
         if (btn.id == `score-${score}`) {
             btn.style.backgroundColor = "#008800";
@@ -168,25 +216,7 @@ function ShowRon() {
     }
 }
 
-function ShowTumo(playerIndex) {
-    tumoPlayer = playerIndex;
-    Show('.screen#tumo');
-    const grid = document.querySelector('.screen#tumo > .btn-grid');
-    grid.innerHTML = '';
-    let list = tumoPlayer === 0 ? TumoListOya : TumoList;
-    for (let i = 0; i < list.length; i++) {
-        if (tumoPlayer === 0) {
-            var score = `${list[i]} All`;
-        } else {
-            var score = `${list[i][0]}-${list[i][1]}`;
-        }
-        const btn = document.createElement('button');
-        btn.textContent = score;
-        btn.id = `score-${score}`;
-        btn.onclick = () => SelectScore(score);
-        grid.appendChild(btn);
-    }
-}
+
 
 // ---------------------------------
 // Pico 2w との無線処理
