@@ -57,9 +57,18 @@ const TumoListOyaOther = [
 
 
 let bluetoothDevice = null;
+let btRecievedData = [];
 let rxCharacteristic = null; 
-let txCharacteristic = null; 
-function LOG(str, color=null) {
+let txCharacteristic = null;
+function LOG(str, type=0) { // type: 0=info, 1=success, 2=error
+    const logArea = document.getElementById('logger');
+    logArea.scrollTop = logArea.scrollHeight;
+    logArea.style.display = 'flex';
+    const p = document.createElement('div');
+    p.classList.add('item');
+    p.classList.add(type === 0 ? 'info' : type === 1 ? 'success' : 'error');
+    p.innerHTML = `<div class="icon">${type === 0 ? 'ℹ️' : type === 1 ? '✅' : '❌'}</div><div class="context">${str.replace(/\n/g, '<br>')}</div>`;
+    logArea.appendChild(p);
     console.log(str);
 }
 
@@ -135,7 +144,7 @@ function PayTumo() {
         alert("点数を選んでください");
         return;
     }
-    const data = `TUMO:${tumoPlayer}<-${selectedScore.replace("-", "_")}`;
+    const data = `TUMO:${tumoPlayer}<-${selectedScore.toString().replace("-", "_")}`;
     Send(data);
     CancelTumo();
 }
@@ -231,7 +240,7 @@ function ShowRon() {
 // 1. Bluetoothデバイスへの接続処理
 async function Connect() {
     try {
-        LOG('デバイスを検索中...\n');
+        LOG('デバイスを検索中...\n', 0);
         bluetoothDevice = await navigator.bluetooth.requestDevice({
             filters: [{ services: [SERVICE_UUID] }]
         });
@@ -240,13 +249,13 @@ async function Connect() {
         await gattConnect();
 
     } catch (error) {
-        LOG('接続失敗: ' + error + '\n');
+        LOG('接続失敗: ' + error + '\n', 2);
     }
 }
 
 // 内部的な接続・通知（Notification）の開始処理
 async function gattConnect() {
-    LOG('接続中...\n');
+    LOG('接続中...\n', 0);
     const server = await bluetoothDevice.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
     
@@ -258,19 +267,19 @@ async function gattConnect() {
     await txCharacteristic.startNotifications();
     txCharacteristic.addEventListener('characteristicvaluechanged', handleDataReceived);
 
-    LOG('JongPass との同期が完了しました！\n');
+    LOG('JongPass との同期が完了しました！\n', 1);
     document.getElementById('send-data').disabled = false;
 }
 
 // 自動再接続
 async function onDisconnected(event) {
     const device = event.target;
-    LOG('通信が切れました。自動再接続を試みます...\n');
+    LOG('通信が切れました。自動再接続を試みます...\n', 0);
     document.getElementById('send-data').disabled = true;
 
     while (!device.gatt.connected) {
         try {
-            LOG('自動再接続を試みています...\n');
+            LOG('自動再接続を試みています...\n', 0);
             await gattConnect();
             break;
         } catch (error) {
@@ -284,8 +293,11 @@ function handleDataReceived(event) {
     let value = event.target.value;
     let decoder = new TextDecoder('utf-8');
     let receivedString = decoder.decode(value);
-    
-    LOG('受信: ' + receivedString + '\n');
+    btRecievedData.push(receivedString);
+    if (btRecievedData.length >= 3) {
+        LOG('受信: ' + btRecievedData.join('\n') + '\n', 1);
+        btRecievedData = []; // リセット
+    }
 }
 
 // 2. データの送信処理
@@ -302,9 +314,9 @@ async function Send(value) {
         
         await rxCharacteristic.writeValueWithResponse(encoder.encode(cleanText));
         
-        LOG('送信完了: ' + cleanText + '\n');
+        LOG('送信完了: ' + cleanText + '\n', 1);
         textInput.value = '';
     } catch (error) {
-        LOG('送信失敗: ' + error + '\n');
+        LOG('送信失敗: ' + error + '\n', 2);
     }
 };

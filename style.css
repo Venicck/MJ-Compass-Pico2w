@@ -1,8 +1,12 @@
+:root {
+    /* レスポンシブな基準フォントサイズ（スマホに合わせて自動調整） */
+    font-size: clamp(12px, 2.2vw, 18px);
+}
+
 * {
     font-family: Arial, sans-serif;
     box-sizing: border-box;
     color: whitesmoke;
-    font-size: 10px;
     margin: 0;
     padding: 0;
 }
@@ -10,6 +14,7 @@
 body {
     margin: 0;
     padding:0;
+    font-size: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -187,6 +192,56 @@ h1 {
     align-items: center;
     justify-content: space-between;
     gap: 1em;
+}
+
+.log {
+    width: 95%;
+    height: 30em;
+    background-color: #333333;
+    border-radius: 5px;
+    border: 1px solid whitesmoke;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    overflow-y: auto;
+}
+
+.log > .item {
+    width: 100%;
+    background-color: #222222;
+    border: 1px solid whitesmoke;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    vertical-align: center;
+    gap: .5em;
+    padding: 0.5em;
+    font-size: 1.2em;
+}
+.log > .item > .icon {
+    font-size: 200%;
+    aspect-ratio: 1/1;
+    text-align: center;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.log > .item.error {
+    border: 1px solid #9e2e2e;
+    box-shadow: 0 0 5px rgba(158, 46, 46, 0.5);
+}
+.log > .item.info {
+    border: 1px solid #2e6da4;
+    box-shadow: 0 0 5px rgba(46, 109, 164, 0.5);
+}
+.log > .item.success {
+    border: 1px solid #4cae4c;
+    box-shadow: 0 0 5px rgba(76, 174, 76, 0.5);
 }
 
 .screen {
