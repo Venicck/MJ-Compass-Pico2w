@@ -4,6 +4,8 @@
 
 BLEServiceUART uart;
 bool flag_Connect = false;
+bool is_connected = false;
+const int boardLED = LED_BUILTIN;
 
 // 麻雀コンパスのグローバル変数
 int scores[] = {25000, 25000, 25000, 25000};
@@ -17,12 +19,15 @@ class MyServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override {
         Serial.println("[BLE] Device Connected.");
         flag_Connect = true;
+        is_connected = true;
     }
 
     void onDisconnect(BLEServer* pServer) override {
         Serial.println("[BLE] Device Disconnected.");
+        is_connected = false;
         // 切断されたら、自動的に再度アドバタイズ（電波発信）を開始して再接続を待つ
         BLE.startAdvertising();
+
     }
 };
 
@@ -227,6 +232,7 @@ void setupCommandMap() {
 void setup() {
     Serial.begin(115200);
     delay(3000);
+    pinMode(boardLED, OUTPUT);
 
     Serial.println("=== 麻雀コンパス コマンドマップモード 起動 ===");
 
@@ -242,6 +248,13 @@ void setup() {
 }
 
 void loop() {
+    if (!is_connected) {
+        if (millis()%500<250) {
+            digitalWrite(boardLED, HIGH);
+        } else {
+            digitalWrite(boardLED, LOW);
+        }
+    }
     if (flag_Connect) {
         delay(500);
         Serial.println("現在のデータを送信中...");
