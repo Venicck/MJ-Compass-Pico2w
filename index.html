@@ -87,7 +87,6 @@
 
     <div class="commands">
         <button id="reset" onclick="Show('.screen#reset')">リセット</button>
-        <button id="chonbo" onclick="Show('.screen#chonbo')">チョンボ</button>
         <button id="seisan" onclick="Show('.screen#seisan')">精算</button>
     </div>
     <div class="log" id="logger" style="display: none;">
@@ -122,6 +121,9 @@
         <h2>P0</h2>
         <div class="btn-grid">
         </div>
+        <select name="TumoOther" id="TumoOther">
+            <option value="">上記以外の点数</option>
+        </select>
         <div class="btn-row">
             <button class="confirm" onclick="PayTumo()">確定</button>
             <button class="cancel" onclick="CancelTumo()">キャンセル</button>
@@ -134,6 +136,9 @@
         <div class="btn-grid">
             <button class="btn-score" id="score-2000" onclick="SelectScore(2000)">2000</button>
         </div>
+        <select name="RonOther" id="RonOther">
+            <option value="">上記以外の点数</option>
+        </select>
         <div class="btn-row">
             <button class="cancel" onclick="CancelRon()">キャンセル</button>
             <button class="confirm" onclick="PayRon()">確定</button>
@@ -146,17 +151,6 @@
             <button id="yes-reset" onclick="ConfirmReset()">はい</button>
             <button id="no-reset" onclick="Hide('.screen#reset')">いいえ</button>
         </div>
-    </div>
-
-    <div class="screen" id="chonbo" style="display: none;">
-        <h1>誰がチョンボしましたか？</h1>
-        <div class="btn-row">
-            <button id="chonbo-east" onclick="Chonbo(0)">東</button>
-            <button id="chonbo-south" onclick="Chonbo(1)">南</button>
-            <button id="chonbo-west" onclick="Chonbo(2)">西</button>
-            <button id="chonbo-north" onclick="Chonbo(3)">北</button>
-        </div>
-        <button id="no-chonbo" onclick="Hide('.screen#chonbo')">キャンセル</button>
     </div>
     
     <div class="screen" id="seisan" style="display: none;">
