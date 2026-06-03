@@ -8,7 +8,7 @@
 </head>
 <script src="script.js"></script>
 <body>
-    <h1>雀パス 制御アプリ</h1>
+    <h1 onclick="OpenDebug()">雀パス 制御アプリ</h1>
     <h2 id="msg"></h2>
 
     <div class="compass">
@@ -104,12 +104,17 @@
             <div class="context">成功</div>
         </div> -->
     </div>
+    <div class="debug" style="display: none;">
+        <button onclick="Hide('.debug')">✕</button>
+        <input type="text" class="debug-input" placeholder="送信するデータを入力">
+        <button onclick="DebugSend()">送信</button>
+    </div>
 
     <button id="cancel" style="display: none;">キャンセル</button>
 
-    <div class="screen" id="connection" style="display: none;">
+    <div class="screen" id="connection">
         <h1>ジャンパスに接続されていません</h1>
-        <button id="connect" onclick="Connect()">端末を選択</button>
+        <button id="connect" onclick="Connect()">デバイスを選択</button>
     </div>
 
     <div class="screen" id="tumo" style="display: none;">
@@ -117,8 +122,10 @@
         <h2>P0</h2>
         <div class="btn-grid">
         </div>
-        <button class="confirm" onclick="PayTumo()">確定</button>
-        <button class="cancel" onclick="CancelTumo()">キャンセル</button>
+        <div class="btn-row">
+            <button class="confirm" onclick="PayTumo()">確定</button>
+            <button class="cancel" onclick="CancelTumo()">キャンセル</button>
+        </div>
     </div>
 
     <div class="screen" id="ron" style="display: none;">
@@ -127,14 +134,18 @@
         <div class="btn-grid">
             <button class="btn-score" id="score-2000" onclick="SelectScore(2000)">2000</button>
         </div>
-        <button class="confirm" onclick="PayRon()">確定</button>
-        <button class="cancel" onclick="CancelRon()">キャンセル</button>
+        <div class="btn-row">
+            <button class="cancel" onclick="CancelRon()">キャンセル</button>
+            <button class="confirm" onclick="PayRon()">確定</button>
+        </div>
     </div>
 
     <div class="screen" id="reset" style="display: none;">
         <h1>ゲームをリセットしますか？</h1>
-        <button id="yes-reset" onclick="Reset()">はい</button>
-        <button id="no-reset" onclick="Hide('.screen#reset')">いいえ</button>
+        <div class="btn-row">
+            <button id="yes-reset" onclick="ConfirmReset()">はい</button>
+            <button id="no-reset" onclick="Hide('.screen#reset')">いいえ</button>
+        </div>
     </div>
 
     <div class="screen" id="chonbo" style="display: none;">
@@ -149,7 +160,11 @@
     </div>
     
     <div class="screen" id="seisan" style="display: none;">
-        <h1>精算</h1>
+        <h1>ゲームを終了にしますか？</h1>
+        <div class="btn-row">
+            <button id="no-seisan" onclick="Hide('.screen#seisan')">いいえ</button>
+            <button id="yes-seisan" onclick="Seisan()">はい</button>
+        </div>
     </div>
 
 </body>

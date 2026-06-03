@@ -57,22 +57,23 @@ const TumoListOyaOther = [
 
 
 let bluetoothDevice = null;
-let btRecievedData = [];
+let btRecievedData = ''; // 受信データを一時的に保存する変数
 let rxCharacteristic = null; 
 let txCharacteristic = null;
 function LOG(str, type=0) { // type: 0=info, 1=success, 2=error
+    let date = new Date().toLocaleTimeString();
     const logArea = document.getElementById('logger');
-    logArea.scrollTop = logArea.scrollHeight;
     logArea.style.display = 'flex';
     const p = document.createElement('div');
     p.classList.add('item');
     p.classList.add(type === 0 ? 'info' : type === 1 ? 'success' : 'error');
-    p.innerHTML = `<div class="icon">${type === 0 ? 'ℹ️' : type === 1 ? '✅' : '❌'}</div><div class="context">${str.replace(/\n/g, '<br>')}</div>`;
+    p.innerHTML = `<div class="icon">${type === 0 ? 'ℹ️' : type === 1 ? '✅' : '❌'}</div><div class="context">[${date}] ${str.replace(/\n/g, '<br>')}</div>`;
     logArea.appendChild(p);
-    console.log(str);
+    logArea.scrollTop = logArea.scrollHeight;
+    console.log(`[${date}] ` + str);
 }
 
-// 全画面の表示・非表示を切り替える関数
+// 要素の表示・非表示を切り替える関数
 function Hide(query) {
     const elements = document.querySelectorAll(query);
     elements.forEach(el => {
@@ -90,16 +91,65 @@ function Show(query, display='flex') {
     });
 }
 
-// 和了
+// ---------------------------------
+// 基本変数
+// ---------------------------------
+const names = ["東", "南", "西", "北"];
+let scores = [25000, 25000, 25000, 25000];
+let reaches = [false, false, false, false];
+let sanma = false; // 三麻かどうか
+let gamehalf = false; // 東場ならfalse、南場ならtrue
+let oya = 0; // 親のプレイヤー番号（0-3）
+let honba = 0; // 本場の数
+let kyotaku = 0; // 供託の数
+
+function RefreshStats() {
+    for (let i = 0; i < 4; i++) {
+        document.querySelector(`.stats#st-${i+1} > .box > .dir`).textContent = Whois(i);
+        document.querySelector(`.score#sc-${i+1}`).textContent = scores[i];
+        if (reaches[i]) {
+            document.querySelector(`.score#sc-${i+1}`).classList.add("reach");
+        } else {
+            document.querySelector(`.score#sc-${i+1}`).classList.remove("reach");
+        }
+    }
+    document.querySelector(".compass > .mid > .box > .text").innerHTML = gamehalf ? "南" : "東" + `${oya+1}局<br>${honba}本場<br>供託 ${kyotaku}`;
+    if (sanma) {
+        document.querySelector(".compass > .mid > .box > .score#sc-4").style.visibility = "hidden";
+        document.querySelector(".compass > .stats#st-4").style.visibility = "hidden";
+    } else {
+        document.querySelector(".compass > .mid > .box > .score#sc-4").style.visibility = "visible";
+        document.querySelector(".compass > .stats#st-4").style.visibility = "visible";
+    }
+}
+
+function ConfirmReset() {
+    Send("RESET");
+    Hide(".screen#reset");
+}
+
+function Whois(val) {
+    if (sanma) {
+        return names[(val+oya) % 3];
+    } else {
+        return names[(val+oya) % 4];
+    }
+} 
+
+// ----------------------------------
+// ロン・ツモの処理
+// ----------------------------------
+
 let ronPlayerPay = null;
 let ronPlayerGet = null;
 let tumoPlayer = null;
 let selectedScore = null;
+
 function SelectRon(playerIndex) {
     ronPlayerGet = playerIndex;
     Show("h2#msg", "block");
     Hide(".commands");
-    Hide(".stats > .box > .btns > button");
+    Hide(".stats > .box > .btns");
     Show("button#cancel", "block");
     document.querySelector("h2#msg").textContent = "支払う人を選んでください";
     document.querySelector("button#cancel").onclick = CancelRon;
@@ -125,8 +175,19 @@ function ConfirmRon(playerIndex) {
     Hide("h2#msg");
     Hide("button#cancel");
     Show(".commands", "flex");
-    ShowRon();
-    document.querySelector(".screen#ron > h2").textContent = `P${ronPlayerPay} → P${ronPlayerGet}`;
+    Show('.screen#ron');
+    const grid = document.querySelector('.screen#ron > .btn-grid');
+    grid.innerHTML = '';
+    let list = ronPlayerGet === oya ? RonListOya : RonList;
+    for (let i = 0; i < list.length; i++) {
+        const score = list[i];
+        const btn = document.createElement('button');
+        btn.textContent = score;
+        btn.id = `score-${score}`;
+        btn.onclick = () => SelectScore(score);
+        grid.appendChild(btn);
+    }
+    document.querySelector(".screen#ron > h2").textContent = `${Whois(ronPlayerPay)}家 → ${Whois(ronPlayerGet)}家へ支払い`;
 }
 
 function PayRon() {
@@ -134,7 +195,7 @@ function PayRon() {
         alert("点数を選んでください");
         return;
     }
-    const data = `RON:${ronPlayerPay}<-${ronPlayerGet}_${selectedScore}`;
+    const data = `RON:${ronPlayerGet}<-${ronPlayerPay}_${selectedScore}`;
     Send(data);
     CancelRon();
 }
@@ -161,7 +222,7 @@ function CancelRon() {
     }
     Hide("h2#msg");
     Hide("button#cancel");
-    Show(".stats > .box > .btns > button", "block");
+    Show(".stats > .box > .btns", "flex");
     Show(".commands", "flex");
     document.querySelector("h2#msg").textContent = "";
 }
@@ -169,19 +230,20 @@ function CancelRon() {
 function ConfirmTumo(playerIndex) {
     tumoPlayer = playerIndex;
     Show('.screen#tumo');
+    document.querySelector(".screen#tumo > h2").textContent = `${Whois(tumoPlayer)}家のツモあがり`;
     const grid = document.querySelector('.screen#tumo > .btn-grid');
     grid.innerHTML = '';
-    let list = tumoPlayer === 0 ? TumoListOya : TumoList;
+    let list = tumoPlayer === oya ? TumoListOya : TumoList;
     for (let i = 0; i < list.length; i++) {
         const idx = i;
         let sco = null;
-        if (tumoPlayer === 0) {
+        if (tumoPlayer === oya) {
             sco = list[idx];
         } else {
             sco = `${list[idx][0]}-${list[idx][1]}`;
         }
         const btn = document.createElement('button');
-        if (tumoPlayer === 0) {
+        if (tumoPlayer === oya) {
             btn.textContent = sco + " All";
         } else {
             btn.textContent = sco;
@@ -196,7 +258,7 @@ function CancelTumo() {
     selectedScore = null;
     tumoPlayer = null;
     Hide('.screen#tumo');
-    Show(".stats > .box > .btns > button", "block");
+    Show(".stats > .box > .btns", "block");
     Show(".commands", "flex");
 }
 
@@ -217,27 +279,10 @@ function SelectScore(score) {
     });
 }
 
-function ShowRon() {
-    Show('.screen#ron');
-    const grid = document.querySelector('.screen#ron > .btn-grid');
-    grid.innerHTML = '';
-    let list = ronPlayerPay === 0 ? RonListOya : RonList;
-    for (let i = 0; i < list.length; i++) {
-        const score = list[i];
-        const btn = document.createElement('button');
-        btn.textContent = score;
-        btn.id = `score-${score}`;
-        btn.onclick = () => SelectScore(score);
-        grid.appendChild(btn);
-    }
-}
-
-
-
 // ---------------------------------
 // Pico 2w との無線処理
 // ---------------------------------
-// 1. Bluetoothデバイスへの接続処理
+// Bluetoothデバイスへの接続処理
 async function Connect() {
     try {
         LOG('デバイスを検索中...\n', 0);
@@ -253,36 +298,35 @@ async function Connect() {
     }
 }
 
-// 内部的な接続・通知（Notification）の開始処理
+// 受信準備
 async function gattConnect() {
     LOG('接続中...\n', 0);
     const server = await bluetoothDevice.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
     
-    // 【修正】送信用と受信用の特性を別々に取得
     rxCharacteristic = await service.getCharacteristic(RX_CHARACTERISTIC_UUID);
     txCharacteristic = await service.getCharacteristic(TX_CHARACTERISTIC_UUID);
-
-    // 受信用(TX)に対して通知を開始
     await txCharacteristic.startNotifications();
     txCharacteristic.addEventListener('characteristicvaluechanged', handleDataReceived);
 
-    LOG('JongPass との同期が完了しました！\n', 1);
-    document.getElementById('send-data').disabled = false;
+    LOG('JongPass からのデータ受信準備完了', 1);
+    Hide(".screen#connection");
 }
 
 // 自動再接続
 async function onDisconnected(event) {
     const device = event.target;
     LOG('通信が切れました。自動再接続を試みます...\n', 0);
-    document.getElementById('send-data').disabled = true;
-
-    while (!device.gatt.connected) {
+    Show(".screen#connection");
+    document.querySelector(".screen#connection > h1").textContent = "再接続しています...";
+    let attempts = 0;
+    while (!device.gatt.connected && attempts < 3) {
         try {
             LOG('自動再接続を試みています...\n', 0);
             await gattConnect();
             break;
         } catch (error) {
+            attempts++;
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
@@ -293,10 +337,24 @@ function handleDataReceived(event) {
     let value = event.target.value;
     let decoder = new TextDecoder('utf-8');
     let receivedString = decoder.decode(value);
-    btRecievedData.push(receivedString);
-    if (btRecievedData.length >= 3) {
-        LOG('受信: ' + btRecievedData.join('\n') + '\n', 1);
-        btRecievedData = []; // リセット
+    btRecievedData += receivedString;
+    if (btRecievedData.split("\n").length > 3) {
+        LOG('受信: ' + btRecievedData.split("\n").slice(0, -1).join('\n'), 1);
+        let str_scores = btRecievedData.split("\n")[0].split("_");
+        let str_reaches = btRecievedData.split("\n")[1].split("_");
+        let options = btRecievedData.split("\n")[2].split(" ");
+        for (let i =0; i < 4; i++) {
+            scores[i] = parseInt(str_scores[i]);
+            reaches[i] = str_reaches[i] === "T" ? true : false;
+        }
+        sanma = options[0] == "T" ? true : false;
+        gamehalf = options[1] == "T" ? true : false;
+        oya = parseInt(options[2]);
+        honba = parseInt(options[3]);
+        kyotaku = parseInt(options[4]);
+        
+        RefreshStats();
+        btRecievedData = ''; // リセット
     }
 }
 
@@ -315,8 +373,26 @@ async function Send(value) {
         await rxCharacteristic.writeValueWithResponse(encoder.encode(cleanText));
         
         LOG('送信完了: ' + cleanText + '\n', 1);
-        textInput.value = '';
     } catch (error) {
         LOG('送信失敗: ' + error + '\n', 2);
     }
 };
+
+// ---------------------------------
+// デバッグ用の関数
+// ---------------------------------
+let debugMode = 0; // 5回目のタップでデバッグモードに入る
+function OpenDebug() {
+    debugMode++;
+    if (debugMode >= 5) {
+        Show(".debug");
+        debugMode = 0;
+    }
+}
+
+async function DebugSend() {
+    const input = document.querySelector(".debug > .debug-input");
+    const val = input.value;
+    input.value = '';
+    await Send(val);
+}

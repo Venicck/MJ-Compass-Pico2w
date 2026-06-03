@@ -3,7 +3,7 @@
 #include <functional>
 
 BLEServiceUART uart;
-bool flag_Connect = false;
+bool flagSend = false;
 bool is_connected = false;
 const int boardLED = LED_BUILTIN;
 
@@ -14,20 +14,19 @@ int oya = 0;
 int honba = 0;
 int kyotaku = 0;
 bool gamehalf = false; // false:東場 true:南場
+bool sanma = false; // 三麻
 
 class MyServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override {
         Serial.println("[BLE] Device Connected.");
-        flag_Connect = true;
         is_connected = true;
+        flagSend = true;
     }
-
     void onDisconnect(BLEServer* pServer) override {
         Serial.println("[BLE] Device Disconnected.");
         is_connected = false;
-        // 切断されたら、自動的に再度アドバタイズ（電波発信）を開始して再接続を待つ
+        flagSend = false;
         BLE.startAdvertising();
-
     }
 };
 
@@ -40,9 +39,16 @@ void Reset(String payload) {
     honba = 0;
     kyotaku = 0; // 供託もリセットに追加
     gamehalf = false;
-    for (int i = 0; i < 4; i++) {
-        scores[i] = 25000;
-        reach[i] = false;
+    if (sanma) {
+        for (int i = 0; i < 4; i++) {
+            scores[i] = 30000;
+            reach[i] = false;
+        }
+    } else {
+        for (int i = 0; i < 4; i++) {
+            scores[i] = 25000;
+            reach[i] = false;
+        }
     }
     Serial.println("[Func] リセットしました");
     SendToBrw(); // ブラウザ同期
@@ -60,7 +66,7 @@ void Ryukyoku(String payload) {
         honba++;
     }
     
-    if (oya > 3) {
+    if ((oya > 3 && !sanma) || (oya > 2 && sanma)) {
         oya = 0;
         gamehalf = !gamehalf;
     }
@@ -79,16 +85,14 @@ void Ryukyoku(String payload) {
 
 void Reach(String payload) {
     int player = payload[0] - '0';
-    if (player >= 0 && player <= 3) {
-        if (reach[player]) {
-            Serial.println("[Func] プレイヤー" + String(player) + "は既にリーチ");
-            return;
-        }
-        Serial.println("[Func] プレイヤー" + String(player) + "がリーチ");
-        reach[player] = true;
-        kyotaku++; // 供託リーチ棒を1本増やす
-        scores[player] -= 1000; // 
+    if (reach[player]) {
+        Serial.println("[Func] プレイヤー" + String(player) + "は既にリーチ");
+        return;
     }
+    Serial.println("[Func] プレイヤー" + String(player) + "がリーチ");
+    reach[player] = true;
+    kyotaku++; // 供託リーチ棒を1本増やす
+    scores[player] -= 1000; // 
     SendToBrw(); // ブラウザ同期
 }
 
@@ -101,34 +105,48 @@ void Tumo(String payload) { // フォーマット例："0<-2000_4000"
     int oya_transit = payload.substring(sep + 1).toInt();
     
     if (who == oya) {
-        // 親のツモあがり
         Serial.println("--- 親ツモ ---");
-        for (int i = 0; i < 4; i++) {
-            if (i != oya) {
-                scores[i] -= ko_transit;
-                scores[who] += ko_transit;
+        if (sanma) {
+            for (int i = 0; i < 3; i++) {
+                if (i != oya) {
+                    scores[i] -= ko_transit;
+                    scores[who] += ko_transit;
+                }
+            }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                if (i != oya) {
+                    scores[i] -= ko_transit;
+                    scores[who] += ko_transit;
+                }
             }
         }
-        honba++; // 親連荘なので本場を増やす
+        
+        honba++; // 親連荘
     } else {
-        // 子のツモあがり
+        // ==========================================
+        // 2. 子のツモあがり
+        // ==========================================
         Serial.println("--- 子ツモ ---");
+        
+        // ① 親からの支払い
         scores[oya] -= oya_transit;
         scores[who] += oya_transit;
         
-        for (int i = 0; i < 4; i++) {
-            if (i != oya && i != who) {
-                scores[i] -= ko_transit;
-                scores[who] += ko_transit;
+        if (sanma) {
+            for (int i = 0; i < 3; i++) {
+                if (i != oya && i != who) {
+                    scores[i] -= ko_transit;
+                    scores[who] += ko_transit;
+                }
             }
-        }
-        
-        // 子が上がったので、次の局へ移るために親を回す処理
-        oya++; 
-        honba = 0; // 子あがりなので本場はリセット
-        if (oya > 3) {
-            oya = 0;
-            gamehalf = !gamehalf;
+        } else {
+            for (int i = 0; i < 4; i++) {
+                if (i != oya && i != who) {
+                    scores[i] -= ko_transit;
+                    scores[who] += ko_transit;
+                }
+            }
         }
     }
     
@@ -144,8 +162,21 @@ void Tumo(String payload) { // フォーマット例："0<-2000_4000"
         kyotaku = 0;
     }
     
+    // 親の移動を関数の一番最後に持ってくることで、表示のズレを防ぐ
+    if (who != oya) {
+        oya++;
+        honba = 0; // 子あがりなので本場はリセット
+        if (oya > 2 && sanma) {
+            oya = 0;
+            gamehalf = !gamehalf;
+        } else if (oya > 3) {
+            oya = 0;
+            gamehalf = !gamehalf;
+        }
+    }
+    
     printScores();
-    SendToBrw(); // ブラウザ同期
+    SendToBrw(); // 最後に一回だけスマホへ同期
 }
 
 void Ron(String payload) { // "和了<-打った人_点数"
@@ -161,6 +192,11 @@ void Ron(String payload) { // "和了<-打った人_点数"
     // 供託回収
     scores[whogets] += kyotaku * 1000;
     kyotaku = 0;
+    
+    // リーチ状態リセット
+    for (int i = 0; i < 4; i++) {
+        reach[i] = false;
+    }
 
     // あがったのが親か子かで親移動・連荘を処理
     if (whogets == oya) {
@@ -173,14 +209,15 @@ void Ron(String payload) { // "和了<-打った人_点数"
             gamehalf = !gamehalf;
         }
     }
-    
-    // リーチ状態リセット
-    for (int i = 0; i < 4; i++) {
-        reach[i] = false;
-    }
 
     printScores();
     SendToBrw(); // ブラウザ同期
+}
+
+void TogglePeople() {
+    sanma = !sanma;
+    Reset("");
+    SendToBrw();
 }
 
 void printScores() {
@@ -189,14 +226,10 @@ void printScores() {
         Serial.print("P" + String(i) + ":" + String(scores[i]) + "点  ");
     }
     Serial.println();
-    Serial.print("【現在の点数】 ");
-    for(int i = 0; i < 4; i++) {
-        Serial.print("P" + String(i) + ":" + String(scores[i]) + "点  ");
-    }
-    Serial.println();
 }
 
 void SendToBrw() { // BTデバイスに送信
+    //1行目:点数 2行目:リーチ 3行目:三麻? 南場? 親? 本場? 供託?
     String msg[] = {"", "", ""};
     for (int i=0;i<3;i++) {
         msg[0] += String(scores[i]);
@@ -207,11 +240,14 @@ void SendToBrw() { // BTデバイスに送信
     msg[0] += String(scores[3]);
     if (reach[3]) msg[1] += "T";
     else msg[1] += "F";
+
+    if (sanma) msg[2] += "T ";
+    else msg[2] += "F ";
     if (gamehalf) msg[2] += "T ";
     else msg[2] += "F ";
     msg[2] += String(oya) + " " + String(honba) + " " + String(kyotaku);
     for (int i=0;i<3;i++) {
-        uart.println(msg[i]);
+        uart.print(msg[i] + "\n");
     }
 }
 // -------------------------------------------------------------------
@@ -234,7 +270,7 @@ void setup() {
     delay(3000);
     pinMode(boardLED, OUTPUT);
 
-    Serial.println("=== 麻雀コンパス コマンドマップモード 起動 ===");
+    Serial.println("JongPass Started.");
 
     // コマンド関数リストの初期化
     setupCommandMap();
@@ -255,11 +291,12 @@ void loop() {
             digitalWrite(boardLED, LOW);
         }
     }
-    if (flag_Connect) {
-        delay(500);
+    if (flagSend) {
+        flagSend = false;        
+        digitalWrite(boardLED, LOW);
         Serial.println("現在のデータを送信中...");
+        delay(2000);
         SendToBrw();
-        flag_Connect = false;
     }
     if (uart.available()) {
         String receivedText = uart.readString();
@@ -287,8 +324,8 @@ void loop() {
         }
 
         if (!commandFound) {
-        Serial.print("エラー: 未登録のコマンドです -> ");
-        Serial.println(receivedText);
+            Serial.print("エラー: 未登録のコマンドです -> ");
+            Serial.println(receivedText);
         }
     }
 }

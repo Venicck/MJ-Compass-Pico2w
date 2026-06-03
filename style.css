@@ -108,6 +108,10 @@ h1 {
     font-size: 1.5em;
     font-weight: bold;
 }
+.mid > .box > .score.reach {
+    color: #bd0f0f;
+    text-decoration: underline;
+}
 
 .mid > .box > .score#sc-2 {
     rotate: -90deg;
@@ -196,7 +200,7 @@ h1 {
 
 .log {
     width: 95%;
-    height: 30em;
+    height: 20em;
     background-color: #333333;
     border-radius: 5px;
     border: 1px solid whitesmoke;
@@ -206,6 +210,7 @@ h1 {
     flex-direction: column;
     gap: 0.5em;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .log > .item {
@@ -221,15 +226,21 @@ h1 {
     gap: .5em;
     padding: 0.5em;
     font-size: 1.2em;
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(50%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0%);
+    }
 }
 .log > .item > .icon {
     font-size: 200%;
     aspect-ratio: 1/1;
-    text-align: center;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 .log > .item.error {
     border: 1px solid #9e2e2e;
@@ -242,6 +253,30 @@ h1 {
 .log > .item.success {
     border: 1px solid #4cae4c;
     box-shadow: 0 0 5px rgba(76, 174, 76, 0.5);
+}
+
+.debug {
+    position: fixed;
+    background-color: black;
+    border: 1px solid whitesmoke;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    top: 2em;
+    width: 95%;
+    height: 5em;
+    z-index: 998;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1em;
+    justify-content: space-between;
+}
+.debug > input {
+    flex: 1 1 auto;
+    height: 70%;
+    color: black;
+    padding: 0.5em;
 }
 
 .screen {
