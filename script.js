@@ -330,6 +330,9 @@ async function onDisconnected(event) {
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
+    if (attempts >= 3) {
+        LOG('自動再接続に失敗しました。\n', 2);
+    }
 }
 
 // Picoからデータを受信したときの処理
