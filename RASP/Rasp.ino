@@ -72,16 +72,22 @@ int kyotaku = 0;
 bool gamehalf = false; // false:東場 true:南場
 bool sanma = false; // 三麻
 
-void drawMahjongPoints(LovyanGFX &lcd, LovyanGFX &lcd2) {
-  int32_t w = lcd.width();   // 176
-  int32_t h = lcd.height();  // 220
+// 画面処理
 
-  lcd.fillScreen(TFT_BLACK);
-  lcd2.fillScreen(TFT_BLACK);
+// 1つのテキストをスプライト経由で指定位置・角度に描画するヘルパー関数
+void drawItem(LovyanGFX &lcd, LGFX_Sprite &spr, const String &text, int32_t x, int32_t y, float angle) {
+  spr.fillScreen(TFT_BLACK);
+  spr.drawString(text, 60, 18);
+  spr.pushRotateZoom(x, y, angle, 1.0, 1.0);
+}
+
+void drawMahjongPoints() {
+  int32_t w = tft1.width();   // 176
+  int32_t h = tft1.height();  // 220
 
   // ==================== 画面1 ====================
   {
-    LGFX_Sprite spr(&lcd);
+    LGFX_Sprite spr(&tft1);
     spr.setColorDepth(16);
     spr.createSprite(120, 36);
     spr.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -91,24 +97,16 @@ void drawMahjongPoints(LovyanGFX &lcd, LovyanGFX &lcd2) {
     spr.setPivot(60, 18); // スプライトの中心(120/2, 36/2)を回転軸に設定
 
     // 下辺: 西 点数 (0度)
-    spr.fillScreen(TFT_BLACK);
-    spr.drawString("25000", 60, 18);
-    spr.pushRotateZoom(w / 2, h - 20, 0, 1.0, 1.0);
+    drawItem(tft1, spr, String(scores[2]), w / 2, h - 20, 0);
 
     // 上辺: 東 方角 (180度)
-    spr.fillScreen(TFT_BLACK);
-    spr.drawString("東", 60, 18);
-    spr.pushRotateZoom(w / 2, 20, 180, 1.0, 1.0);
+    drawItem(tft1, spr, "東", w / 2, 20, 180);
 
     // 左辺: 東1局 (90度)
-    spr.fillScreen(TFT_BLACK);
-    spr.drawString("東1局", 60, 18);
-    spr.pushRotateZoom(20, h / 2, 90, 1.0, 1.0);
+    drawItem(tft1, spr, "東1局", 20, h / 2, 90);
 
     // 右辺: 北 25000 (270度)
-    spr.fillScreen(TFT_BLACK);
-    spr.drawString("北 25000", 60, 18);
-    spr.pushRotateZoom(w - 20, h / 2, 270, 1.0, 1.0);
+    drawItem(tft1, spr, "北 "+String(scores[3]), w - 20, h / 2, 270);
 
     spr.deleteSprite();
   }
@@ -117,7 +115,7 @@ void drawMahjongPoints(LovyanGFX &lcd, LovyanGFX &lcd2) {
 
   // ==================== 画面2 ====================
   {
-    LGFX_Sprite spr2(&lcd2);
+    LGFX_Sprite spr2(&tft2);
     spr2.setColorDepth(16);
     spr2.createSprite(120, 36);
     spr2.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -127,24 +125,16 @@ void drawMahjongPoints(LovyanGFX &lcd, LovyanGFX &lcd2) {
     spr2.setPivot(60, 18);
 
     // 下辺: 西 方角 (0度)
-    spr2.fillScreen(TFT_BLACK);
-    spr2.drawString("西", 60, 18);
-    spr2.pushRotateZoom(w / 2, h - 20, 0, 1.0, 1.0);
+    drawItem(tft2, spr2, "西", w / 2, h - 20, 0);
 
     // 上辺: 東 点数 (180度)
-    spr2.fillScreen(TFT_BLACK);
-    spr2.drawString("25000", 60, 18);
-    spr2.pushRotateZoom(w / 2, 20, 180, 1.0, 1.0);
+    drawItem(tft2, spr2, String(scores[0]), w / 2, 20, 180);
 
-    // 左辺: 南 25000 (90度)
-    spr2.fillScreen(TFT_BLACK);
-    spr2.drawString("南 25000", 60, 18);
-    spr2.pushRotateZoom(20, h / 2, 90, 1.0, 1.0);
+    // 左辺: 南 方角と点数 (90度)
+    drawItem(tft2, spr2, "南 "+String(scores[1]), 20, h / 2, 90);
 
     // 右辺: 0本場 (90度に変更)
-    spr2.fillScreen(TFT_BLACK);
-    spr2.drawString("0本場", 60, 18);
-    spr2.pushRotateZoom(w - 20, h / 2, 90, 1.0, 1.0);
+    drawItem(tft2, spr2, "0本場", w - 20, h / 2, 90);
 
     spr2.deleteSprite();
   }
@@ -436,11 +426,14 @@ void setup() {
   // 3. 描画
   tft1.init();
   tft1.setRotation(0);
+  tft1.fillScreen(TFT_BLACK);
   delay(10);
   tft2.init();
   tft2.setRotation(0);
+  tft2.fillScreen(TFT_BLACK);
   delay(20);
-  drawMahjongPoints(tft1, tft2);
+  
+  drawMahjongPoints();
 }
 
 void loop() {
