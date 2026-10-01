@@ -72,11 +72,29 @@ int kyotaku = 0;
 bool gamehalf = false; // false:東場 true:南場
 bool sanma = false; // 三麻
 
+String directionOf(int player) {
+    String dirs[] = {"東", "南", "西", "北"};
+    if (sanma) {
+        return dirs[(oya + player) % 3];
+    } else {
+        return dirs[(oya + player) % 4];
+    }
+}
+
 // 画面処理
 
 // 1つのテキストをスプライト経由で指定位置・角度に描画するヘルパー関数
-void drawItem(LovyanGFX &lcd, LGFX_Sprite &spr, const String &text, int32_t x, int32_t y, float angle) {
-  spr.fillScreen(TFT_BLACK);
+void drawItem(LovyanGFX &lcd, LGFX_Sprite &spr, const String &text, int32_t x, int32_t y, float angle, bool isRed, bool isHighlight) {
+  uint16_t bg_color = TFT_BLACK;
+  uint16_t text_color = isRed ? TFT_RED : TFT_WHITE;
+  if (isHighlight) {
+    uint16_t tmp = text_color;
+    text_color = bg_color;
+    bg_color = tmp;
+  }
+  
+  spr.fillScreen(bg_color);
+  spr.setTextColor(text_color, bg_color);
   spr.drawString(text, 60, 18);
   spr.pushRotateZoom(x, y, angle, 1.0, 1.0);
 }
@@ -90,23 +108,22 @@ void drawMahjongPoints() {
     LGFX_Sprite spr(&tft1);
     spr.setColorDepth(16);
     spr.createSprite(120, 36);
-    spr.setTextColor(TFT_WHITE, TFT_BLACK);
     spr.setTextDatum(middle_center);
     spr.setFont(&fonts::efontJA_16);
     spr.setTextSize(1);
     spr.setPivot(60, 18); // スプライトの中心(120/2, 36/2)を回転軸に設定
 
     // 下辺: 西 点数 (0度)
-    drawItem(tft1, spr, String(scores[2]), w / 2, h - 20, 0);
+    drawItem(tft1, spr, String(scores[2]), w / 2, h - 20, 0, false, false);
 
     // 上辺: 東 方角 (180度)
-    drawItem(tft1, spr, "東", w / 2, 20, 180);
+    drawItem(tft1, spr, directionOf(0), w / 2, 20, 180, oya == 0, false);
 
     // 左辺: 東1局 (90度)
-    drawItem(tft1, spr, "東1局", 20, h / 2, 90);
+    drawItem(tft1, spr, "東" + String(oya+1) + "局", 20, h / 2, 90, false, false);
 
     // 右辺: 北 25000 (270度)
-    drawItem(tft1, spr, "北 "+String(scores[3]), w - 20, h / 2, 270);
+    drawItem(tft1, spr, directionOf(3) + " " + String(scores[3]), w - 20, h / 2, 270, false, reach[3]);
 
     spr.deleteSprite();
   }
@@ -125,16 +142,16 @@ void drawMahjongPoints() {
     spr2.setPivot(60, 18);
 
     // 下辺: 西 方角 (0度)
-    drawItem(tft2, spr2, "西", w / 2, h - 20, 0);
+    drawItem(tft2, spr2, directionOf(2), w / 2, h - 20, 0, false, reach[2]);
 
     // 上辺: 東 点数 (180度)
-    drawItem(tft2, spr2, String(scores[0]), w / 2, 20, 180);
+    drawItem(tft2, spr2, String(scores[0]), w / 2, 20, 180, false, reach[0]);
 
     // 左辺: 南 方角と点数 (90度)
-    drawItem(tft2, spr2, "南 "+String(scores[1]), 20, h / 2, 90);
+    drawItem(tft2, spr2, directionOf(1)+" "+String(scores[1]), 20, h / 2, 90, false, reach[1]);
 
     // 右辺: 0本場 (90度に変更)
-    drawItem(tft2, spr2, "0本場", w - 20, h / 2, 90);
+    drawItem(tft2, spr2, String(honba) + "本場", w - 20, h / 2, 90, false, false);
 
     spr2.deleteSprite();
   }
@@ -205,6 +222,7 @@ void Ryukyoku(String payload) {
     Serial.println(String(oya + 1) + "局 " + String(honba) + "本場");
     
     SendToBrw(); // ブラウザ同期
+    drawMahjongPoints();
 }
 
 void Reach(String payload) {
@@ -217,7 +235,9 @@ void Reach(String payload) {
     reach[player] = true;
     kyotaku++; // 供託リーチ棒を1本増やす
     scores[player] -= 1000; // 
+
     SendToBrw(); // ブラウザ同期
+    drawMahjongPoints();
 }
 
 void Tumo(String payload) { // フォーマット例："0<-2000_4000"
@@ -300,6 +320,7 @@ void Tumo(String payload) { // フォーマット例："0<-2000_4000"
     }
     
     printScores();
+    drawMahjongPoints();
     SendToBrw(); // 最後に一回だけスマホへ同期
 }
 
@@ -335,6 +356,7 @@ void Ron(String payload) { // "和了<-打った人_点数"
     }
 
     printScores();
+    drawMahjongPoints();
     SendToBrw(); // ブラウザ同期
 }
 
